@@ -35,6 +35,15 @@ export const heroStyles = `
     background-image: url("/images/Reveal_image_desktop.png");
     mask-image: url(#gh-hero-mask);
     -webkit-mask-image: url(#gh-hero-mask);
+    /* The mask's underlying SVG geometry is rewritten every animation
+       frame (see useHeroMaskReveal.ts), which otherwise gives the browser
+       no advance signal that this specific layer - and only this layer -
+       needs its own persistent compositor layer. Without that hint, some
+       browsers periodically fold this layer back into a shared one and
+       repromote it, adding avoidable per-frame overhead on top of the
+       mask raster itself. Purely a compositing hint; no visual effect. */
+    will-change: mask-image;
+    transform: translateZ(0);
   }
 
   /* Hidden host for the SVG <mask>/<filter> definitions — zero size,
@@ -351,7 +360,7 @@ export const heroStyles = `
   @media (max-width: 320px) {
     .gh-headline {
       width: 68%;
-      font-size: clamp(2.3rem, 12vw, 3.2rem);
+      font-size: clamp(2.3rem, 12.5vw, 3.8rem);
     }
   }
 `;

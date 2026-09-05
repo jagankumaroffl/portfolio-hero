@@ -48,12 +48,27 @@ export default function HeroImage({ pathRefs }: HeroImageProps) {
 
       <svg width="0" height="0" className="gh-mask-defs" aria-hidden="true" focusable="false">
         <defs>
+          {/*
+            The filter region (x/y/width/height) only needs enough margin
+            beyond each mass's own bounding box to hold the blur's actual
+            visible spread — a Gaussian blur's contribution is negligible
+            past roughly 3x its stdDeviation (9px here, so ~27px), and the
+            feComponentTransfer threshold right after it clips off almost
+            everything below full alpha anyway. 150%/-25% margin is already
+            several times that reach. The browser must rasterize this
+            filter region on every frame this mask's geometry changes (see
+            useHeroMaskReveal.ts), so a tighter, correctly-sized region
+            meaningfully cuts per-frame GPU/CPU work with zero visible
+            difference — anything the previous, much larger 220%/-60%
+            region added beyond this was already computing blur output for
+            pixels that were fully transparent both before and after.
+          */}
           <filter
             id="gh-hero-gooey"
-            x="-60%"
-            y="-60%"
-            width="220%"
-            height="220%"
+            x="-25%"
+            y="-25%"
+            width="150%"
+            height="150%"
             colorInterpolationFilters="sRGB"
           >
             <feGaussianBlur in="SourceGraphic" stdDeviation={HERO_MASK_GOOEY_BLUR_STD_DEVIATION} result="blurred" />

@@ -41,13 +41,81 @@ function waitForImages(): Promise<void> {
 }
 
 /**
+ * Which Hero background-image files are actually in play for the current
+ * viewport, mirroring the breakpoints in hero.styles.ts exactly:
+ *  - width > 767px: base + reveal, both desktop crops.
+ *  - width <= 767px: only the base layer (the reveal layer is
+ *    `display: none` at this width regardless of orientation, and
+ *    browsers don't fetch a display:none element's background-image), as
+ *    the mobile portrait crop, or the desktop crop in landscape.
+ */
+function resolveHeroImagePaths(): string[] {
+  if (typeof window === "undefined") return [];
+
+  const isNarrow = window.matchMedia("(max-width: 767px)").matches;
+  if (isNarrow) {
+    const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+    return [isPortrait ? "/images/Base_image_mobile.png" : "/images/Base_image_desktop.png"];
+  }
+  return ["/images/Base_image_desktop.png", "/images/Reveal_image_desktop.png"];
+}
+
+/**
+ * Resolves once a single image has actually decoded and is ready to
+ * paint — not merely downloaded. `HTMLImageElement.decode()` covers both:
+ * it implicitly waits for the network fetch, then performs (and awaits)
+ * off-main-thread decode, which is exactly the gap that let the Hero
+ * photo "pop in" after the loader had already finished (the network
+ * transfer completing is not the same moment as a large PNG being decoded
+ * and paintable). Resolves - never rejects - so one broken/missing image
+ * can't hang the loader forever; falls back to onload/onerror for the
+ * rare environment without `decode()`.
+ */
+function preloadAndDecode(src: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = src;
+    if (typeof img.decode === "function") {
+      img.decode().then(
+        () => resolve(),
+        () => resolve()
+      );
+    } else {
+      img.addEventListener("load", () => resolve(), { once: true });
+      img.addEventListener("error", () => resolve(), { once: true });
+    }
+  });
+}
+
+/**
+ * Resolves once the Hero's CSS `background-image` photo(s) for the
+ * current viewport are fully decoded. These are invisible to
+ * `waitForImages()` above (that function only scans `document.images`,
+ * i.e. real `<img>` elements — the Hero uses CSS `background-image`, not
+ * `<img>`) and were previously only covered by `waitForWindowLoad()`'s
+ * implicit "the whole document, including CSS-referenced resources, has
+ * loaded" guarantee. That's too fragile to rely on alone: it only holds
+ * if the browser discovers the Hero's `<style>` block (and therefore the
+ * image URLs in it) before `window`'s `load` event fires, which isn't a
+ * reliable expectation.
+ */
+function waitForHeroImages(): Promise<void> {
+  const paths = resolveHeroImagePaths();
+  if (paths.length === 0) return Promise.resolve();
+  return Promise.all(paths.map(preloadAndDecode)).then(() => undefined);
+}
+
+/**
  * Resolves when the page is genuinely ready to be shown. Runs all checks in
  * parallel — total wait is the slowest one, never an artificial sum.
  */
 export function waitForPageReady(): Promise<void> {
-  return Promise.all([waitForWindowLoad(), waitForFonts(), waitForImages()]).then(
-    () => undefined
-  );
+  return Promise.all([
+    waitForWindowLoad(),
+    waitForFonts(),
+    waitForImages(),
+    waitForHeroImages(),
+  ]).then(() => undefined);
 }
 
 /** True if the user has requested reduced motion at the OS/browser level. */

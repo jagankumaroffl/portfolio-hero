@@ -18,7 +18,7 @@ import { useLoader } from "@/hooks/useLoader";
 export default function Home() {
   const loading = useLoader();
 
-  const [aboutNode, setAboutNode] = useState<HTMLElement | null>(null);
+  const [, setAboutNode] = useState<HTMLElement | null>(null);
   const aboutRef = useCallback((node: HTMLElement | null) => {
     setAboutNode(node);
   }, []);
@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <SmoothScrollProvider locked={loading}>
       <Loader loading={loading} />
-      {aboutNode && <Hero />}
+      <Hero />
       <About ref={aboutRef} />
       <Projects />
       <Journey />
