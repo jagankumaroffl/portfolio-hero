@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #edf5ff;
+  --ink: #0a0d12;
+  --grid-line: rgba(10, 20, 40, 0.08);
+  --grid-line-strong: rgba(10, 20, 40, 0.14);
+  --ease-primary: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-display: var(--font-albert-sans), "Albert Sans", sans-serif;
+  --font-mono: var(--font-fragment-mono), "Fragment Mono", monospace;
+
+  /* Single canonical accent, reused by Journey/Toolbox/Lab/Contact's
+     scoped --jy-accent/--tb-accent/--lb-accent/--ct-accent variables and
+     by the Hero nav's active/hover state, so every accent use traces
+     back to one value. */
+  --accent: #d4f808;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-display);
+  overscroll-behavior: none;
+}
+
+/* Locked by default; SmoothScrollProvider removes this attribute the
+   instant real loading finishes. Prevents any scroll — native or Lenis —
+   before the loader has actually exited, with no JS-timing gap. */
+html[data-scroll-locked="true"] {
+  overflow: hidden;
+}
+
+body {
+  min-width: 320px;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+@keyframes hero-portrait-in {
+  from {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-portrait {
+  animation: hero-portrait-in 1.1s var(--ease-primary) both;
+}
+
+.anim-nav {
+  animation: fade-down 0.8s var(--ease-primary) both;
+  animation-delay: 0.15s;
+}
+
+.anim-line {
+  animation: fade-up 0.9s var(--ease-primary) both;
+}
+
+.anim-line-1 {
+  animation-delay: 0.35s;
+}
+
+.anim-line-2 {
+  animation-delay: 0.46s;
+}
+
+.anim-line-3 {
+  animation-delay: 0.57s;
+}
+
+.anim-intro {
+  animation: fade-up 0.9s var(--ease-primary) both;
+  animation-delay: 0.7s;
+}
+
+.anim-tagline {
+  animation: fade-up 0.9s var(--ease-primary) both;
+  animation-delay: 0.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-portrait,
+  .anim-nav,
+  .anim-line,
+  .anim-intro,
+  .anim-tagline {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+}
