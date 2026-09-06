@@ -38,7 +38,9 @@ export default function RootLayout({
       className={`${albertSans.variable} ${fragmentMono.variable}`}
       data-scroll-locked="true"
     >
-      <body>{children}</body>
+      <body>
+        <div className="site-shell">{children}</div>
+      </body>
     </html>
   );
 }

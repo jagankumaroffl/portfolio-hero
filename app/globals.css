@@ -24,28 +24,10 @@ html,
 body {
   padding: 0;
   margin: 0;
-  width: 100%;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-display);
   overscroll-behavior: none;
-  /* Nothing on this page is meant to scroll horizontally — Journey's
-     pinned/horizontal-progress scene and any other wide inner element
-     move within their own bounded container via transforms, never by
-     actually exceeding the viewport's width. But `position: fixed`
-     elements (the Loader) are sized against the true viewport
-     regardless of this, while everything else in normal document flow
-     is sized against the page's actual scrollable width — so if even
-     one element anywhere on the page is wider than the viewport (a
-     rounding error in a vw-based width, a horizontal-scroll section
-     leaking past its bounds, etc.), the whole page's horizontal extent
-     grows to match it, and every *other*, correctly-100%-wide section
-     ends up only filling half of that now-wider canvas, with blank
-     space past it — exactly what "zooming out reveals the rest, but
-     it's still only half the screen" describes. Clipping overflow here
-     makes the page's width unconditionally match the true viewport, no
-     matter what any individual element does. */
-  overflow-x: hidden;
 }
 
 /* Locked by default; SmoothScrollProvider removes this attribute the
@@ -57,6 +39,29 @@ html[data-scroll-locked="true"] {
 
 body {
   min-width: 320px;
+}
+
+/*
+  Clips accidental horizontal overflow (the actual fix for the "page only
+  fills half the screen" bug) without putting that overflow rule on html
+  or body themselves. Setting overflow-x on html/body triggers a CSS spec
+  rule that, when one axis is non-"visible" and the other is left at its
+  default "visible", silently converts the other axis to "auto" — turning
+  html/body into their own independent scroll containers instead of just
+  "not scrolling sideways". Desktop mouse-wheel scroll tolerates a nested
+  auto-overflow container fine; mobile touch/momentum scrolling (and
+  Lenis, which expects the plain default scroll model) does not, which is
+  what locked mobile scrolling entirely.
+  This wrapper has no explicit height, so it just grows to fit its
+  content — the same "auto" conversion technically happens to its own
+  overflow-y too, but since its height already equals its content's
+  height by definition, that auto-overflow never actually has anything to
+  activate on, so page scrolling is completely unaffected while
+  horizontal overflow is still clipped.
+*/
+.site-shell {
+  width: 100%;
+  overflow-x: hidden;
 }
 
 ::selection {
