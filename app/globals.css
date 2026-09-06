@@ -24,10 +24,28 @@ html,
 body {
   padding: 0;
   margin: 0;
+  width: 100%;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-display);
   overscroll-behavior: none;
+  /* Nothing on this page is meant to scroll horizontally — Journey's
+     pinned/horizontal-progress scene and any other wide inner element
+     move within their own bounded container via transforms, never by
+     actually exceeding the viewport's width. But `position: fixed`
+     elements (the Loader) are sized against the true viewport
+     regardless of this, while everything else in normal document flow
+     is sized against the page's actual scrollable width — so if even
+     one element anywhere on the page is wider than the viewport (a
+     rounding error in a vw-based width, a horizontal-scroll section
+     leaking past its bounds, etc.), the whole page's horizontal extent
+     grows to match it, and every *other*, correctly-100%-wide section
+     ends up only filling half of that now-wider canvas, with blank
+     space past it — exactly what "zooming out reveals the rest, but
+     it's still only half the screen" describes. Clipping overflow here
+     makes the page's width unconditionally match the true viewport, no
+     matter what any individual element does. */
+  overflow-x: hidden;
 }
 
 /* Locked by default; SmoothScrollProvider removes this attribute the
