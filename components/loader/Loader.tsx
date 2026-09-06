@@ -102,6 +102,23 @@ const styles = `
   overflow: visible;
 }
 
+@media (max-width: 767px) {
+  /* On desktop's wide/short viewports, an independent vw width + vh
+     height happen to land close enough to this mark's real aspect ratio
+     (viewBox 320x230) that the mismatch isn't noticeable. On mobile's
+     narrow/tall viewports the same formula produces wildly different
+     numbers from two unrelated axes - a few px wide by tens of px tall -
+     forcing the SVG into a thin, stretched sliver instead of its actual
+     letterform, and shrinking it near the point of being unreadable.
+     Sizing from width alone (with height: auto deriving from the SVG's
+     own viewBox) keeps the correct proportions at any size. Scoped to
+     mobile only so desktop's current sizing is untouched. */
+  .jk-loader__mark {
+    width: clamp(64px, 22vw, 120px);
+    height: auto;
+  }
+}
+
 .jk-loader__stroke {
   will-change: stroke-dashoffset;
   animation-duration: ${CYCLE_SECONDS}s;
@@ -205,17 +222,6 @@ export default function Loader({ loading: loadingProp, className }: LoaderProps 
   const exitRequested = useRef(false);
   const unmounted = useRef(false);
 
-  // Inject the keyframes/styles once; safe for SSR (guarded) and avoids a
-  // separate CSS file. Unchanged from the supplied component.
-  useEffect(() => {
-    const id = "jk-loader-styles";
-    if (typeof document === "undefined" || document.getElementById(id)) return;
-    const tag = document.createElement("style");
-    tag.id = id;
-    tag.textContent = styles;
-    document.head.appendChild(tag);
-  }, []);
-
   // Begin the fade-out + eventual unmount. Called either immediately
   // (reduced motion, where the loop keyframes never run) or from the
   // animationiteration listener below (normal motion, at a clean loop
@@ -277,6 +283,26 @@ export default function Loader({ loading: loadingProp, className }: LoaderProps 
       aria-live="polite"
       aria-busy={loading}
     >
+      {/*
+        Rendered directly in JSX (same pattern as Hero's <style>{heroStyles}</style>)
+        instead of injected via a useEffect + document.createElement side
+        effect. That side-effect approach only ran after the component
+        mounted client-side, leaving a real gap - before it ran, this div
+        had none of the rules below applied: no `position: fixed`/`inset:0`
+        (so it sat in normal document flow, sized to its own content,
+        instead of covering the screen), no black background, no flex
+        centering, and the raw unmasked J/K stroke paths visible at full
+        opacity (since the mask-driven "start collapsed" keyframes hadn't
+        applied either). On fast desktop hydration that gap is a sub-frame
+        flicker, invisible in practice. On slower mobile hydration it's a
+        real, visible flash matching exactly what gets reported here: odd
+        unmasked letter shapes, the Hero peeking through below an
+        undersized loader box, content appearing off-center. A plain
+        <style> element in the render output is part of the server-rendered
+        HTML for the very first paint, on every device — no gap to see.
+      */}
+      <style>{styles}</style>
+
       <svg
         className="jk-loader__mark"
         viewBox="0 0 320 230"
